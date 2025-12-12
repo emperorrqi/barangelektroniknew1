@@ -133,10 +133,11 @@ if (!isset($_SESSION['username'])) {
     <div class="section">
       <h3>🔄 Transaksi</h3>
       <ul class="menu">
+        <li><a href="entry_barang_masuk.php">Entry Barang masuk dari Vendor</a></li>
         <li><a href="entry_barang_pesanan.php">Entry Barang Pesanan</a></li>
         <li><a href="entry_basterima.php">Entry Berita Serah Terima</a></li>
         <li><a href="entry_surat_jalan.php">Entry Surat Jalan</a></li>
-        <li><a href="entry_retur.php">Entry Retur</a></li>
+        <li><a href="entry_retur_barang.php">Entry Retur</a></li>
       </ul>
     </div>
 
@@ -145,6 +146,11 @@ if (!isset($_SESSION['username'])) {
       <h3>📊 Laporan</h3>
       <ul class="menu">
         <li><a href="laporan_umum.php">Laporan Stok barang</a></li>
+        <li><a href="laporan_entry_barang_masuk.php">Laporan Barang masuk dari Vendor</a></li>
+        <li><a href="laporan_entry_barang_pesanan.php">Laporan Barang Pesanan</a></li>
+        <li><a href="laporan_entry_basterima.php">Laporan Berita Serah Terima</a></li>
+        <li><a href="laporan_entry_surat_jalan.php">Laporan Surat Jalan</a></li>
+        <li><a href="laporan_entry_retur.php">Laporan Retur</a></li>
       </ul>
     </div>
 

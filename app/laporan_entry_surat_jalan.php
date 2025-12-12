@@ -2,8 +2,8 @@
 include 'koneksi.php';
 
 // Ambil filter dari GET
-$kode_surat = $_GET['kode_surat'] ?? '';
-$hariIni    = isset($_GET['hari_ini']) ? true : false;
+$tanggal_awal = $_GET['tanggal_awal'] ?? '';
+$tanggal_akhir = $_GET['tanggal_akhir'] ?? '';
 
 // Bangun query dasar
 $sql = "
@@ -16,18 +16,18 @@ $sql = "
     WHERE 1=1
 ";
 
-// Filter hari ini
-if ($hariIni) {
-    $today = date('Y-m-d');
-    $sql .= " AND s.tanggal = '$today'";
-    $judul = "Surat Jalan Hari Ini ($today)";
+// Filter tanggal awal dan akhir
+if ($tanggal_awal != '' && $tanggal_akhir != '') {
+    $sql .= " AND s.tanggal BETWEEN '$tanggal_awal' AND '$tanggal_akhir'";
+    $judul = "Surat Jalan dari $tanggal_awal s/d $tanggal_akhir";
+} elseif ($tanggal_awal != '') {
+    $sql .= " AND s.tanggal >= '$tanggal_awal'";
+    $judul = "Surat Jalan dari $tanggal_awal";
+} elseif ($tanggal_akhir != '') {
+    $sql .= " AND s.tanggal <= '$tanggal_akhir'";
+    $judul = "Surat Jalan sampai $tanggal_akhir";
 } else {
-    $judul = "Cetak Surat Jalan";
-}
-
-// Filter kode surat jalan
-if ($kode_surat != '') {
-    $sql .= " AND s.kode_surat LIKE '%$kode_surat%'";
+    $judul = "Laporan Surat Jalan";
 }
 
 $sql .= " ORDER BY s.id_surat ASC";
@@ -52,11 +52,6 @@ th { background-color: #3498db; color: #fff; }
 @media print { .no-print { display: none; } }
 .btn-back { display:inline-block; padding:8px 16px; background:#6c757d; color:white; border-radius:6px; text-decoration:none; margin-bottom:15px; }
 .btn-back:hover { background:#495057; }
-.btn-filter { display:inline-block; padding:6px 12px; border-radius:5px; text-decoration:none; color:white; margin-right:5px; }
-.btn-hariini { background:#28a745; }
-.btn-hariini:hover { background:#218838; }
-.tanda-tangan { margin-top: 50px; width: 300px; float: right; text-align: center; }
-.tanda-tangan p { margin-bottom: 80px; } /* space untuk tanda tangan */
 </style>
 </head>
 <body>
@@ -65,19 +60,13 @@ th { background-color: #3498db; color: #fff; }
 
 <h2><?= $judul ?></h2>
 
-<!-- Tombol Cepat Filter Hari Ini -->
-<div class="no-print" style="margin-bottom: 15px;">
-    <a href="?hari_ini=1" class="btn-filter btn-hariini">📅 Hari Ini</a>
-</div>
-
-<!-- Form Filter Kode Surat -->
+<!-- Form Filter Tanggal -->
 <form method="get" class="no-print">
-    <label>Kode Surat Jalan:</label>
-    <input type="text" name="kode_surat" value="<?= htmlspecialchars($kode_surat) ?>" placeholder="Kosongkan untuk semua">
+    <label>Tanggal Awal:</label>
+    <input type="date" name="tanggal_awal" value="<?= htmlspecialchars($tanggal_awal) ?>">
 
-    <?php if ($hariIni): ?>
-        <input type="hidden" name="hari_ini" value="1">
-    <?php endif; ?>
+    <label>Tanggal Akhir:</label>
+    <input type="date" name="tanggal_akhir" value="<?= htmlspecialchars($tanggal_akhir) ?>">
 
     <button type="submit">Filter</button>
     <button type="button" onclick="window.print()">🖨 Cetak</button>
@@ -107,12 +96,6 @@ th { background-color: #3498db; color: #fff; }
         </tr>
     <?php endif; ?>
 </table>
-
-<!-- Area Tanda Tangan -->
-<div class="tanda-tangan">
-    <p>Driver</p>
-    __________________________
-</div>
 
 </body>
 </html>

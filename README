@@ -46,7 +46,7 @@ exit;
 
 ## FS(2) powershell
 docker start manajemengudang-mysql
-Get-Content sql/init.sql | docker exec -i manajemengudang-mysql mysql -u root -prootpassword manajemengudang
+Get-Content sql/init.sql -Raw | docker exec -i manajemengudang-mysql mysql -u root -prootpassword manajemengudang
 
 
 ## FS(2) CMD
@@ -70,3 +70,7 @@ git push -u origin main
 git remote add origin https://github.com/emperorrqi/sistempersediaanbarangelektronik.git
 git branch -M main
 git push -u origin main
+
+https://railway.app/
+
+ihgedBsnysOkDSBNRHKSjKZAhEcWTELj

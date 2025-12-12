@@ -30,13 +30,14 @@ if (isset($_POST['tambah'])) {
     $penerima = $_POST['penerima'];
     $id_barang = $_POST['id_barang'];
     $jumlah = (int)$_POST['jumlah'];
+    $sn_perangkat = $_POST['sn_perangkat']; // FIELD BARU
 
     // Cek jumlah barang dari entry pesanan
     $q = $mysqli->query("SELECT SUM(jumlah) AS total_pesanan FROM trx_barang_pesanan WHERE id_barang = $id_barang");
     $row = $q->fetch_assoc();
     $totalPesanan = (int)$row['total_pesanan'];
 
-    // Cek jumlah yang sudah dikirim di berita serah terima
+    // Cek jumlah yang sudah terkirim
     $q2 = $mysqli->query("SELECT SUM(jumlah) AS total_terkirim FROM trx_berita_serah_terima WHERE id_barang = $id_barang");
     $row2 = $q2->fetch_assoc();
     $totalTerkirim = (int)$row2['total_terkirim'];
@@ -46,10 +47,14 @@ if (isset($_POST['tambah'])) {
     if ($jumlah > $sisa) {
         $notif = "⚠ Jumlah melebihi stok/pesanan tersedia ($sisa unit tersisa)";
     } else {
-        $stmt = $mysqli->prepare("INSERT INTO trx_berita_serah_terima 
-            (kode_basterima, tanggal, penerima, id_barang, jumlah)
-            VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssii", $kode_basterima, $tanggal, $penerima, $id_barang, $jumlah);
+        $stmt = $mysqli->prepare("
+            INSERT INTO trx_berita_serah_terima 
+            (kode_basterima, tanggal, penerima, id_barang, jumlah, sn_perangkat)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->bind_param("sssiss", $kode_basterima, $tanggal, $penerima, 
+                          $id_barang, $jumlah, $sn_perangkat);
+
         if ($stmt->execute()) {
             $stmt->close();
             header("Location: entry_basterima.php?success=1");
@@ -60,7 +65,7 @@ if (isset($_POST['tambah'])) {
     }
 }
 
-// Ambil barang dari entry pesanan dengan stok tersisa
+// Ambil barang
 $barang = $mysqli->query("
     SELECT b.id_barang, b.kode_barang, b.nama_barang, 
            SUM(p.jumlah) AS total_pesanan,
@@ -106,7 +111,7 @@ td { padding: 8px; border: 1px solid #ddd; text-align: center; }
     <h2>Entry Berita Serah Terima</h2>
 
     <a href="index.php" class="btn-back">⬅ Kembali ke Halaman Utama</a>
-    <a href="cetak_basterima.php" target="_blank" class="btn-print">🖨️ Cetak Basterima</a>
+    <a href="cetak_basterima.php" target="_blank" class="btn-print">🖨️ Cetak Basterima Hari ini</a>
 
     <?php if (!empty($notif)) echo "<div class='alert-warning'>$notif</div>"; ?>
     <?php if (isset($_GET['success'])) echo "<div class='alert-success'>✔ Data berhasil disimpan!</div>"; ?>
@@ -136,6 +141,9 @@ td { padding: 8px; border: 1px solid #ddd; text-align: center; }
         <label>Jumlah barang keluar</label>
         <input type="number" name="jumlah" min="1" required>
 
+        <label>SN Perangkat</label>
+        <input type="text" name="sn_perangkat" placeholder="Isi SN Perangkat" required>
+
         <button type="submit" name="tambah">Simpan</button>
     </form>
 
@@ -148,7 +156,8 @@ td { padding: 8px; border: 1px solid #ddd; text-align: center; }
             <th>Tanggal</th>
             <th>Penerima</th>
             <th>Barang</th>
-            <th>Jumlah barang keluar</th>
+            <th>Jumlah</th>
+            <th>SN Perangkat</th>
         </tr>
         <?php
         $sql = "SELECT t.*, b.nama_barang, b.kode_barang
@@ -164,9 +173,11 @@ td { padding: 8px; border: 1px solid #ddd; text-align: center; }
             <td><?= $row['penerima'] ?></td>
             <td><?= $row['nama_barang'] ?> (<?= $row['kode_barang'] ?>)</td>
             <td><?= $row['jumlah'] ?></td>
+            <td><?= $row['sn_perangkat'] ?></td>
         </tr>
         <?php endwhile; ?>
     </table>
+
 </div>
 </body>
 </html>

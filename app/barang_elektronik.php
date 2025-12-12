@@ -1,4 +1,4 @@
-<?php
+<?php 
 include 'koneksi.php';
 
 // ===========================
@@ -38,22 +38,12 @@ if (isset($_POST['tambah'])) {
 }
 
 // ===========================
-// Hapus Data
-// ===========================
-if (isset($_GET['hapus'])) {
-    $id = intval($_GET['hapus']);
-    $mysqli->query("DELETE FROM master_barang_elektronik WHERE id_barang=$id");
-    header("Location: barang_elektronik.php");
-    exit;
-}
-
-// ===========================
 // Ambil Data
 // ===========================
 $data = $mysqli->query("SELECT * FROM master_barang_elektronik ORDER BY id_barang DESC");
 if(!$data){ die("Query Error: ".$mysqli->error); }
-?>
 
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -69,10 +59,7 @@ if(!$data){ die("Query Error: ".$mysqli->error); }
             color: #111827;
         }
 
-        .container {
-            max-width: 1100px;
-            margin:auto;
-        }
+        .container { max-width: 1100px; margin:auto; }
 
         .card {
             background:white;
@@ -89,7 +76,6 @@ if(!$data){ die("Query Error: ".$mysqli->error); }
             color:#1f2937;
         }
 
-        /* Tombol Kembali */
         .btn-back {
             display:inline-block;
             padding:8px 16px;
@@ -166,14 +152,14 @@ if(!$data){ die("Query Error: ".$mysqli->error); }
             font-weight:600;
         }
 
-        a.delete {
-            color:#dc2626;
+        a.edit {
+            color:#2563eb;
             font-weight:600;
             text-decoration:none;
             transition:0.2s;
         }
 
-        a.delete:hover { text-decoration:underline; }
+        a.edit:hover { text-decoration:underline; }
 
         @media (max-width:768px){
             form { grid-template-columns: 1fr; }
@@ -187,7 +173,6 @@ if(!$data){ die("Query Error: ".$mysqli->error); }
     <div class="card">
         <h2>📦 Master Barang Elektronik</h2>
 
-        <!-- Tombol Kembali -->
         <a href="index.php" class="btn-back">← Kembali ke Halaman Utama</a>
 
         <!-- FORM INPUT -->
@@ -243,7 +228,7 @@ if(!$data){ die("Query Error: ".$mysqli->error); }
                 <td><?= $row['spesifikasi'] ?></td>
                 <td><?= $row['kategori'] ?></td>
                 <td>
-                    <a class="delete" href="barang_elektronik.php?hapus=<?= $row['id_barang'] ?>" onclick="return confirm('Yakin ingin menghapus barang ini?')">Hapus</a>
+                    <a class="edit" href="edit_barang_elektronik.php?id=<?= $row['id_barang'] ?>">Edit</a>
                 </td>
             </tr>
             <?php endwhile; ?>

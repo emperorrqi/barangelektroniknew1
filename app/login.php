@@ -105,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
   <div class="login-container">
-    <h2>Login Sistem Persediaan Barang HC ICON</h2>
+    <h2>Login Sistem Persediaan Barang PT Icon Plus</h2>
     <?php if ($error): ?>
       <p class="error"><?= $error ?></p>
     <?php endif; ?>

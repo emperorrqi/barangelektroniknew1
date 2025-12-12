@@ -97,7 +97,7 @@ $barang = $mysqli->query("SELECT * FROM master_barang_elektronik ORDER BY nama_b
     <h2>Entry Retur Barang</h2>
 
     <a href="index.php" class="btn-back">⬅ Kembali ke Halaman Utama</a>
-    <a href="cetak_retur_barang.php" target="_blank" class="btn-print">🖨️ Cetak Retur</a>
+    <a href="cetak_retur_barang.php" target="_blank" class="btn-print">🖨️ Cetak Retur Hari Ini</a>
 
     <?php if (isset($_GET['success'])): ?>
         <div class="alert-success">✔ Data berhasil disimpan!</div>

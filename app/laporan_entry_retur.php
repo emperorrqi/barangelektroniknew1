@@ -1,28 +1,22 @@
 <?php
 include 'koneksi.php';
 
-// Ambil filter dari GET
-$kode_retur = $_GET['kode_retur'] ?? '';
-$hariIni = isset($_GET['hari_ini']) ? true : false;
+// Ambil filter tanggal dari GET
+$tanggal_awal = $_GET['tanggal_awal'] ?? '';
+$tanggal_akhir = $_GET['tanggal_akhir'] ?? '';
 
-// Bangun query
+// Bangun query dasar
 $sql = "SELECT r.*, b.kode_barang, b.nama_barang
         FROM trx_retur r
         JOIN master_barang_elektronik b ON r.id_barang = b.id_barang
         WHERE 1=1";
 
-// Filter hari ini
-if ($hariIni) {
-    $today = date('Y-m-d');
-    $sql .= " AND r.tanggal = '$today'";
-    $judul = "cetak Retur barang ($today)";
+// Filter berdasarkan tanggal
+if ($tanggal_awal != '' && $tanggal_akhir != '') {
+    $sql .= " AND r.tanggal BETWEEN '$tanggal_awal' AND '$tanggal_akhir'";
+    $judul = "Laporan Retur Barang ($tanggal_awal s/d $tanggal_akhir)";
 } else {
-    $judul = "Cetak Retur Barang";
-}
-
-// Filter kode retur
-if ($kode_retur != '') {
-    $sql .= " AND r.kode_retur LIKE '%$kode_retur%'";
+    $judul = "Laporan Retur Barang";
 }
 
 $sql .= " ORDER BY r.id_retur DESC";
@@ -47,8 +41,8 @@ th { background: #eee; }
 .btn-back { background:#6c757d; }
 .btn-back:hover { background:#495057; }
 form { margin-bottom: 15px; }
-input[type=text] { padding:6px; }
-button { padding:6px 12px; margin-left:5px; cursor:pointer; }
+input[type=date] { padding:6px; margin-right:10px; }
+button { padding:6px 12px; cursor:pointer; }
 @media print { .no-print { display: none; } }
 </style>
 </head>
@@ -58,13 +52,13 @@ button { padding:6px 12px; margin-left:5px; cursor:pointer; }
 
 <h2><?= $judul ?></h2>
 <h4>Sistem Informasi Manajemen Barang Elektronik</h4>
-<hr>
 
-<!-- Form Filter -->
+<!-- Form Filter Tanggal -->
 <form method="get" class="no-print">
-    <label>Kode Retur:</label>
-    <input type="text" name="kode_retur" value="<?= htmlspecialchars($kode_retur) ?>" placeholder="Kosongkan untuk semua">
-    <label><input type="checkbox" name="hari_ini" value="1" <?= $hariIni ? 'checked' : '' ?>> Retur Hari Ini</label>
+    <label>Tanggal Awal:</label>
+    <input type="date" name="tanggal_awal" value="<?= htmlspecialchars($tanggal_awal) ?>" required>
+    <label>Tanggal Akhir:</label>
+    <input type="date" name="tanggal_akhir" value="<?= htmlspecialchars($tanggal_akhir) ?>" required>
     <button type="submit">Filter</button>
     <button type="button" onclick="window.print()" class="btn-print">🖨️ Print</button>
 </form>
@@ -93,20 +87,6 @@ button { padding:6px 12px; margin-left:5px; cursor:pointer; }
             <td colspan="5">Tidak ada data retur ditemukan.</td>
         </tr>
     <?php endif; ?>
-</table>
-
-<br><br><br>
-
-<table style="width: 100%; border: none;">
-    <tr>
-        <td style="border:none; width:70%;"></td>
-        <td style="border:none; text-align:center;">
-            <p><?= date('d-m-Y') ?></p>
-            <p><b>Mengetahui,</b></p>
-            <br><br><br>
-            <p>(_________________________)</p>
-        </td>
-    </tr>
 </table>
 
 </body>

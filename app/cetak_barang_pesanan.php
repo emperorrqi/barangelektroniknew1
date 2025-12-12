@@ -1,113 +1,139 @@
-<?php
+<?php 
 include 'koneksi.php';
 
-// Ambil filter dari form
-$tgl_awal = $_GET['tgl_awal'] ?? '';
-$tgl_akhir = $_GET['tgl_akhir'] ?? '';
-$id_barang = $_GET['id_barang'] ?? '';
-$id_gudang = $_GET['id_gudang'] ?? '';
+// Ambil filter dari GET
+$kode_pesanan = $_GET['kode_pesanan'] ?? '';
+$hariIni = isset($_GET['hari_ini']) ? true : false;
+$today = date('Y-m-d');
 
-// Ambil daftar barang & gudang untuk filter
-$barang_list = $mysqli->query("SELECT * FROM master_barang_elektronik ORDER BY nama_barang ASC");
-$gudang_list = $mysqli->query("SELECT * FROM master_gudang ORDER BY nama_gudang ASC");
+// Build WHERE
+$where = $hariIni ? "WHERE p.tanggal = '$today'" : "WHERE 1";
 
-// Query data dengan filter
-$query = "
-    SELECT p.*, b.nama_barang, b.kode_barang, b.spesifikasi, g.nama_gudang
+// Filter kode pesanan
+if ($kode_pesanan != '') {
+    $kode_pesanan_safe = $mysqli->real_escape_string($kode_pesanan);
+    $where .= " AND p.kode_pesanan LIKE '%$kode_pesanan_safe%'";
+}
+
+// Query JOIN lengkap
+$sql = "
+    SELECT p.*, 
+           b.kode_barang, b.nama_barang, b.spesifikasi,
+           g.nama_gudang,
+           a.nama_admin, a.kode_admin
     FROM trx_barang_pesanan p
     LEFT JOIN master_barang_elektronik b ON p.id_barang = b.id_barang
     LEFT JOIN master_gudang g ON p.id_gudang = g.id_gudang
-    WHERE 1
+    LEFT JOIN master_administrasi a ON p.id_admin = a.id_admin
+    $where
+    ORDER BY p.id_pesanan DESC
 ";
 
-if ($tgl_awal && $tgl_akhir) {
-    $query .= " AND p.tanggal BETWEEN '$tgl_awal' AND '$tgl_akhir'";
-}
-if ($id_barang) {
-    $query .= " AND p.id_barang = " . intval($id_barang);
-}
-if ($id_gudang) {
-    $query .= " AND p.id_gudang = " . intval($id_gudang);
-}
-
-$query .= " ORDER BY p.id_pesanan ASC";
-
-$data = $mysqli->query($query);
+$data = $mysqli->query($sql);
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Barang Pesanan</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        h2 { text-align: center; }
-        form { margin-bottom: 20px; }
-        input, select { padding:5px; margin-right:10px; }
-        table { width:100%; border-collapse: collapse; margin-top:20px; }
-        th, td { border:1px solid #333; padding:8px; text-align:left; }
-        th { background:#007bff; color:white; }
-        button { padding:5px 10px; cursor:pointer; }
-        @media print {
-            form, button { display:none; }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>🖨️ Cetak Barang Pesanan</title>
+
+<style>
+body { font-family: Arial; padding:20px; }
+h2 { text-align:center; margin-bottom:20px; }
+form { margin-bottom:15px; }
+input { padding:6px; margin-right:10px; }
+button {
+    padding:6px 12px; cursor:pointer;
+    background:#007bff; color:white;
+    border:none; border-radius:5px;
+}
+button:hover { background:#0056b3; }
+table { width:100%; border-collapse:collapse; margin-top:10px; }
+th, td {
+    border:1px solid #000;
+    padding:8px;
+    font-size:14px;
+}
+th { background:#007bff; color:white; }
+@media print { .no-print { display:none; } }
+
+.btn-back {
+    display:inline-block; padding:8px 16px;
+    background:#6c757d; color:white;
+    border-radius:6px;
+    text-decoration:none;
+    margin-bottom:15px;
+}
+.btn-back:hover { background:#495057; }
+
+.tanda-tangan {
+    margin-top: 50px;
+    width: 300px;
+    float: right;
+    text-align: center;
+}
+.tanda-tangan p { margin-bottom: 80px; }
+</style>
 </head>
+
 <body>
 
-<h2>📄 Laporan Barang Pesanan</h2>
-<p>Tanggal Cetak: <?= date('d-m-Y') ?></p>
+<a href="index.php" class="btn-back no-print">⬅ Kembali ke Halaman Utama</a>
 
-<!-- Filter Form -->
-<form method="get">
-    <label>Tanggal Awal:</label>
-    <input type="date" name="tgl_awal" value="<?= htmlspecialchars($tgl_awal) ?>">
+<h2>📄 Cetak Pesanan Barang (<?= date('d-m-Y') ?>)</h2>
 
-    <label>Tanggal Akhir:</label>
-    <input type="date" name="tgl_akhir" value="<?= htmlspecialchars($tgl_akhir) ?>">
+<!-- Form Filter -->
+<form method="get" class="no-print">
+    <label>Kode Pesanan:</label>
+    <input type="text" name="kode_pesanan"
+           value="<?= htmlspecialchars($kode_pesanan) ?>"
+           placeholder="Kosongkan untuk semua">
 
-    <label>Barang:</label>
-    <select name="id_barang">
-        <option value="">-- Semua Barang --</option>
-        <?php while($b = $barang_list->fetch_assoc()): ?>
-            <option value="<?= $b['id_barang'] ?>" <?= ($id_barang == $b['id_barang']) ? 'selected' : '' ?>>
-                <?= $b['kode_barang'] ?> - <?= $b['nama_barang'] ?>
-            </option>
-        <?php endwhile; ?>
-    </select>
+    <label>
+        <input type="checkbox" name="hari_ini" value="1" <?= $hariIni ? 'checked' : '' ?>>
+        Hari Ini
+    </label>
 
-    <label>Gudang:</label>
-    <select name="id_gudang">
-        <option value="">-- Semua Gudang --</option>
-        <?php while($g = $gudang_list->fetch_assoc()): ?>
-            <option value="<?= $g['id_gudang'] ?>" <?= ($id_gudang == $g['id_gudang']) ? 'selected' : '' ?>>
-                <?= $g['nama_gudang'] ?>
-            </option>
-        <?php endwhile; ?>
-    </select>
-
-    <button type="submit">🔍 Filter</button>
-    <button type="button" onclick="window.print()">🖨️ Cetak Halaman</button>
+    <button type="submit">Filter</button>
+    <button type="button" onclick="window.print()">🖨️ Print</button>
 </form>
 
 <table>
-    <tr>
-        <th>Kode Pesanan</th>
-        <th>Tanggal</th>
-        <th>Barang</th>
-        <th>Gudang</th>
-        <th>Jumlah</th>
-    </tr>
-    <?php while($row = $data->fetch_assoc()): ?>
-    <tr>
-        <td><?= $row['kode_pesanan'] ?></td>
-        <td><?= $row['tanggal'] ?></td>
-        <td><?= $row['kode_barang'] ?> - <?= $row['nama_barang'] ?><br><small><?= $row['spesifikasi'] ?></small></td>
-        <td><?= $row['nama_gudang'] ?></td>
-        <td><?= $row['jumlah'] ?></td>
-    </tr>
-    <?php endwhile; ?>
+<tr>
+    <th>No</th>
+    <th>Kode Pesanan</th>
+    <th>Tanggal</th>
+    <th>Admin</th>
+    <th>Barang</th>
+    <th>Gudang</th>
+    <th>Jumlah</th>
+    <th>Serial Number</th>
+</tr>
+
+<?php 
+$no = 1;
+while($row = $data->fetch_assoc()):
+?>
+<tr>
+    <td><?= $no++ ?></td>
+    <td><?= $row['kode_pesanan'] ?></td>
+    <td><?= $row['tanggal'] ?></td>
+    <td><?= $row['kode_admin'] ?> - <?= $row['nama_admin'] ?></td>
+    <td>
+        <?= $row['kode_barang'] ?> - <?= $row['nama_barang'] ?><br>
+        <small><?= $row['spesifikasi'] ?></small>
+    </td>
+    <td><?= $row['nama_gudang'] ?></td>
+    <td><?= $row['jumlah'] ?></td>
+    <td><?= $row['serial_number'] ?></td>
+</tr>
+<?php endwhile; ?>
 </table>
+
+<div class="tanda-tangan">
+    <p>Disetujui Oleh</p>
+    __________________________
+</div>
 
 </body>
 </html>

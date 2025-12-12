@@ -29,98 +29,35 @@ if (isset($_POST['tambah'])) {
     $id_driver = $_POST['id_driver'];
     $id_gudang = $_POST['id_gudang'];
     $keterangan = $_POST['keterangan'];
-    $id_barang = $_POST['id_barang'];
-    $jumlah = (int)$_POST['jumlah'];
 
-    // Insert Surat Jalan
-    $stmt = $mysqli->prepare("INSERT INTO trx_surat_jalan (kode_surat, tanggal, id_driver, id_gudang, keterangan)
+    $stmt = $mysqli->prepare("INSERT INTO trx_surat_jalan (kode_surat, tanggal, id_driver, id_gudang, keterangan) 
                               VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("ssiis", $kode_surat, $tanggal, $id_driver, $id_gudang, $keterangan);
     $stmt->execute();
-    $id_surat = $mysqli->insert_id;
-
-    // Insert Detail
-    $stmt2 = $mysqli->prepare("INSERT INTO trx_surat_jalan_detail (id_surat, id_barang, jumlah)
-                               VALUES (?, ?, ?)");
-    $stmt2->bind_param("iii", $id_surat, $id_barang, $jumlah);
-    $stmt2->execute();
-
     $stmt->close();
-    $stmt2->close();
 
     header("Location: entry_surat_jalan.php?success=1");
     exit;
 }
 
 // ==========================
-// Hapus Data Surat
-// ==========================
-if (isset($_GET['hapus'])) {
-    $id_surat = (int)$_GET['hapus'];
-    $mysqli->query("DELETE FROM trx_surat_jalan_detail WHERE id_surat=$id_surat");
-    $mysqli->query("DELETE FROM trx_surat_jalan WHERE id_surat=$id_surat");
-    header("Location: entry_surat_jalan.php");
-    exit;
-}
-
-// ==========================
-// Ambil Data Driver & Gudang
+// Ambil data driver & gudang
 // ==========================
 $driver = $mysqli->query("SELECT * FROM master_driver ORDER BY nama_driver ASC");
 $gudang = $mysqli->query("SELECT * FROM master_gudang ORDER BY nama_gudang ASC");
 
 // ==========================
-// Ambil Barang dari BASTerima (Sisa Stok)
+// Ambil data surat jalan
 // ==========================
-$barangBasterima = $mysqli->query("
-    SELECT b.id_barang, b.kode_barang, b.nama_barang,
-           SUM(bs.jumlah) AS total_terima,
-           IFNULL((SELECT SUM(jumlah) FROM trx_surat_jalan_detail WHERE id_barang = bs.id_barang), 0) AS total_kirim
-    FROM trx_berita_serah_terima bs
-    JOIN master_barang_elektronik b ON bs.id_barang = b.id_barang
-    GROUP BY b.id_barang
-    HAVING total_terima - total_kirim > 0
-    ORDER BY b.nama_barang ASC
-");
-
-// ==========================
-// Ambil Data Surat Jalan + Detail Barang
-// ==========================
-$data = $mysqli->query("
+$dataSurat = $mysqli->query("
     SELECT s.id_surat, s.kode_surat, s.tanggal, s.keterangan,
            d.nama_driver, d.kode_driver,
-           g.kode_gudang, g.lokasi,
-           b.kode_barang, b.nama_barang, sjd.jumlah
+           g.kode_gudang, g.lokasi
     FROM trx_surat_jalan s
     JOIN master_driver d ON s.id_driver = d.id_driver
     JOIN master_gudang g ON s.id_gudang = g.id_gudang
-    LEFT JOIN trx_surat_jalan_detail sjd ON s.id_surat = sjd.id_surat
-    LEFT JOIN master_barang_elektronik b ON sjd.id_barang = b.id_barang
     ORDER BY s.id_surat DESC
 ");
-
-// Grouping manual
-$listSurat = [];
-while ($row = $data->fetch_assoc()) {
-    $id = $row['id_surat'];
-    if (!isset($listSurat[$id])) {
-        $listSurat[$id] = [
-            "kode_surat" => $row["kode_surat"],
-            "tanggal" => $row["tanggal"],
-            "keterangan" => $row["keterangan"],
-            "driver" => $row["nama_driver"] . " (" . $row["kode_driver"] . ")",
-            "gudang" => $row["kode_gudang"] . " - " . $row["lokasi"],
-            "barang" => []
-        ];
-    }
-    if ($row['nama_barang']) {
-        $listSurat[$id]["barang"][] = [
-            "nama_barang" => $row["nama_barang"],
-            "kode_barang" => $row["kode_barang"],
-            "jumlah" => $row["jumlah"]
-        ];
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -130,7 +67,7 @@ while ($row = $data->fetch_assoc()) {
 <title>Entry Surat Jalan</title>
 <style>
 body { font-family: Arial; background:#eef1f7; padding:25px; }
-.container { width:750px; margin:auto; background:#fff; padding:25px; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.1); }
+.container { width:700px; margin:auto; background:#fff; padding:25px; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.1); }
 h2,h3{margin-bottom:10px;color:#2c3e50;}
 label{font-weight:bold;margin-top:10px;display:block;}
 input,select,textarea{width:100%;padding:10px;margin-top:5px;border-radius:6px;border:1px solid #cfcfcf;}
@@ -138,10 +75,13 @@ button{background:#3498db;padding:10px 18px;color:white;border:none;margin-top:1
 button:hover{background:#2980b9;}
 table{width:100%;margin-top:25px;border-collapse:collapse;font-size:14px;}
 th{background:#3498db;color:white;padding:9px;}
-td{padding:8px;border:1px solid #ddd;}
+td{padding:8px;border:1px solid #ddd;text-align:center;}
 .alert-success{background:#2ecc71;color:white;padding:10px;margin-bottom:15px;border-radius:6px;}
-.btn-back {display:inline-block;margin-bottom:15px;padding:8px 16px;background:#6c757d;color:white;border-radius:6px;text-decoration:none;font-weight:bold;}
+.btn-back, .btn-cetak {display:inline-block;margin-bottom:15px;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:bold;color:white;}
+.btn-back {background:#6c757d;}
 .btn-back:hover {background:#495057;}
+.btn-cetak {background:#28a745;margin-left:10px;}
+.btn-cetak:hover {background:#218838;}
 </style>
 </head>
 <body>
@@ -150,8 +90,11 @@ td{padding:8px;border:1px solid #ddd;}
 
     <h2>Entry Surat Jalan</h2>
 
-    <a href="index.php" class="btn-back">⬅ Kembali ke Halaman Utama</a>
-    <a href="cetak_surat_jalan.php?id_surat=<?= $id_surat ?>" target="_blank">🖨 Cetak</a><br>
+    <!-- Tombol Kembali & Cetak -->
+    <div>
+        <a href="index.php" class="btn-back">⬅ Kembali ke Halaman Utama</a>
+        <a href="cetak_surat_jalan.php" target="_blank" class="btn-cetak">🖨 Cetak Surat Jalan Hari Ini</a>
+    </div>
 
     <?php if (isset($_GET['success'])): ?>
         <div class="alert-success">✔ Data berhasil disimpan!</div>
@@ -180,21 +123,6 @@ td{padding:8px;border:1px solid #ddd;}
             <?php endwhile; ?>
         </select>
 
-        <label>Pilih Barang dari BASTerima (Sisa Stok)</label>
-        <select name="id_barang" required>
-            <option value="">-- Pilih Barang --</option>
-            <?php while($b = $barangBasterima->fetch_assoc()):
-                $sisa = $b['total_terima'] - $b['total_kirim'];
-            ?>
-                <option value="<?= $b['id_barang'] ?>">
-                    <?= $b['kode_barang'] ?> - <?= $b['nama_barang'] ?> (Tersisa: <?= $sisa ?>)
-                </option>
-            <?php endwhile; ?>
-        </select>
-
-        <label>Jumlah Kirim</label>
-        <input type="number" name="jumlah" min="1" required>
-
         <label>Keterangan</label>
         <textarea name="keterangan" rows="3"></textarea>
 
@@ -210,36 +138,19 @@ td{padding:8px;border:1px solid #ddd;}
             <th>Tanggal</th>
             <th>Driver</th>
             <th>Gudang</th>
-            <th>Barang & Jumlah</th>
             <th>Keterangan</th>
-            <th>Aksi</th>
         </tr>
 
-        <?php foreach ($listSurat as $id_surat => $s): ?>
+        <?php while($row = $dataSurat->fetch_assoc()): ?>
             <tr>
-                <td><?= $s['kode_surat'] ?></td>
-                <td><?= $s['tanggal'] ?></td>
-                <td><?= $s['driver'] ?></td>
-                <td><?= $s['gudang'] ?></td>
-
-                <td>
-                    <?php foreach ($s['barang'] as $brg): ?>
-                        • <?= $brg['nama_barang'] ?> (<?= $brg['kode_barang'] ?>) — <b><?= $brg['jumlah'] ?></b><br>
-                    <?php endforeach; ?>
-                </td>
-
-                <td><?= $s['keterangan'] ?></td>
-
-                <td>
-                    <a href="cetak_surat_jalan.php?id_surat=<?= $id_surat ?>" target="_blank">🖨 Cetak</a><br>
-                    <a href="entry_surat_jalan.php?hapus=<?= $id_surat ?>" style="color:red;"
-                       onclick="return confirm('Hapus surat ini?')">❌ Hapus</a>
-                </td>
+                <td><?= $row['kode_surat'] ?></td>
+                <td><?= $row['tanggal'] ?></td>
+                <td><?= $row['nama_driver'] ?> (<?= $row['kode_driver'] ?>)</td>
+                <td><?= $row['kode_gudang'] ?> - <?= $row['lokasi'] ?></td>
+                <td><?= $row['keterangan'] ?></td>
             </tr>
-        <?php endforeach; ?>
-
+        <?php endwhile; ?>
     </table>
-
 </div>
 
 </body>

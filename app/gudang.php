@@ -26,14 +26,6 @@ if (isset($_POST['tambah'])) {
     exit;
 }
 
-// ===== Hapus Data =====
-if (isset($_GET['hapus'])) {
-    $id = $_GET['hapus'];
-    $mysqli->query("DELETE FROM master_gudang WHERE id_gudang=$id");
-    header("Location: gudang.php");
-    exit;
-}
-
 // ===== Load Data =====
 $data = $mysqli->query("SELECT * FROM master_gudang ORDER BY kode_gudang ASC");
 ?>
@@ -133,12 +125,12 @@ $data = $mysqli->query("SELECT * FROM master_gudang ORDER BY kode_gudang ASC");
     tr:hover td {
         background: #f3f8ff;
     }
-    .hapus {
-        color: red;
+    .edit {
+        color: #ffc107;
         font-weight: bold;
         text-decoration: none;
     }
-    .hapus:hover {
+    .edit:hover {
         text-decoration: underline;
     }
 </style>
@@ -183,11 +175,7 @@ $data = $mysqli->query("SELECT * FROM master_gudang ORDER BY kode_gudang ASC");
             <td><?= $row['nama_gudang'] ?></td>
             <td><?= nl2br($row['lokasi']) ?></td>
             <td>
-                <a class="hapus"
-                   onclick="return confirm('Yakin menghapus data gudang ini?')"
-                   href="gudang.php?hapus=<?= $row['id_gudang'] ?>">
-                   Hapus
-                </a>
+                <a class="edit" href="edit_gudang.php?id=<?= $row['id_gudang'] ?>">Edit</a>
             </td>
         </tr>
         <?php } ?>

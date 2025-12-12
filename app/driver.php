@@ -47,17 +47,6 @@ if (isset($_POST['update'])) {
     exit;
 }
 
-// ========================
-// Hapus Driver
-// ========================
-if (isset($_GET['hapus'])) {
-    $id = $_GET['hapus'];
-    $mysqli->query("DELETE FROM master_driver WHERE id_driver=$id");
-
-    header("Location: driver.php");
-    exit;
-}
-
 // Ambil data driver
 $data = $mysqli->query("SELECT * FROM master_driver ORDER BY id_driver DESC");
 ?>
@@ -90,13 +79,17 @@ $data = $mysqli->query("SELECT * FROM master_driver ORDER BY id_driver DESC");
         }
         .btn {
             padding: 10px 16px;
-            background: #3b82f6;
             color: white;
             border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
+            cursor: pointer;
+            border: none;
         }
-        .btn:hover { background: #2563eb; }
+        .btn-back { background:#6c757d; margin-right:10px; }
+        .btn-back:hover { background:#495057; }
+        .btn-add { background:#3b82f6; }
+        .btn-add:hover { background:#2563eb; }
 
         table {
             width: 100%;
@@ -112,17 +105,10 @@ $data = $mysqli->query("SELECT * FROM master_driver ORDER BY id_driver DESC");
             background: #f3f4f6; 
             font-weight: 600;
         }
-        a.delete {
-            color: #ef4444;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        a.delete:hover { text-decoration: underline; }
         a.edit {
             color: #10b981;
             font-weight: 600;
             text-decoration: none;
-            margin-right: 10px;
         }
         a.edit:hover { text-decoration: underline; }
 
@@ -157,8 +143,9 @@ $data = $mysqli->query("SELECT * FROM master_driver ORDER BY id_driver DESC");
 <div class="container">
     <h2>🚚 Master Driver</h2>
 
-    <!-- Tombol buka modal tambah -->
-    <button class="btn" onclick="openTambah()">+ Tambah Driver</button>
+    <!-- Tombol Kembali & Tambah -->
+    <a href="index.php" class="btn btn-back">⬅ Kembali ke Halaman Utama</a>
+    <button class="btn btn-add" onclick="openTambah()">+ Tambah Driver</button>
 
     <table>
         <tr>
@@ -182,53 +169,42 @@ $data = $mysqli->query("SELECT * FROM master_driver ORDER BY id_driver DESC");
                     '<?= $row['no_hp'] ?>',
                     '<?= $row['alamat'] ?>'
                 )">Edit</a>
-
-                <a class="delete" 
-                   href="driver.php?hapus=<?= $row['id_driver'] ?>"
-                   onclick="return confirm('Hapus driver ini?')">
-                   Hapus
-                </a>
             </td>
         </tr>
         <?php endwhile; ?>
     </table>
 </div>
 
-
 <!-- =================== MODAL TAMBAH =================== -->
 <div class="modal" id="modalTambah">
     <div class="modal-content">
         <h3>Tambah Driver</h3>
-
         <form method="post">
             <input type="text" name="nama_driver" placeholder="Nama Driver" required>
             <input type="text" name="no_hp" placeholder="No HP">
             <textarea name="alamat" placeholder="Alamat"></textarea>
 
-            <button class="btn" name="tambah">Simpan</button>
+            <button class="btn btn-add" name="tambah">Simpan</button>
             <button class="btn" type="button" onclick="closeTambah()" style="background:#6b7280;">Batal</button>
         </form>
     </div>
 </div>
 
-
 <!-- =================== MODAL EDIT =================== -->
 <div class="modal" id="modalEdit">
     <div class="modal-content">
         <h3>Edit Driver</h3>
-
         <form method="post">
             <input type="hidden" name="id_driver" id="edit_id">
             <input type="text" name="nama_driver" id="edit_nama" required>
             <input type="text" name="no_hp" id="edit_hp">
             <textarea name="alamat" id="edit_alamat"></textarea>
 
-            <button class="btn" name="update">Update</button>
+            <button class="btn btn-add" name="update">Update</button>
             <button class="btn" type="button" onclick="closeEdit()" style="background:#6b7280;">Batal</button>
         </form>
     </div>
 </div>
-
 
 <script>
 function openTambah() {
